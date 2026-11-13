@@ -618,6 +618,27 @@
       }
     });
 
+    document.addEventListener("keydown", event => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      const target = event.target;
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+
+      if (/^[1-4]$/.test(event.key)) {
+        if (answered) return;
+        const button = answers.children[Number(event.key) - 1];
+        if (!button || button.disabled || button.hidden) return;
+        event.preventDefault();
+        button.click();
+        return;
+      }
+
+      if (event.key === "Enter" && answered && !nextButton.hidden) {
+        if (target && target.tagName === "BUTTON" && target !== nextButton) return;
+        event.preventDefault();
+        nextButton.click();
+      }
+    });
+
     renderQuestion();
   </script>
 </body>
