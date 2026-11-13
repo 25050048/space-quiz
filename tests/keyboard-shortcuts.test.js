@@ -30,6 +30,8 @@ class Element {
   }
 
   get innerHTML() { return this._innerHTML || ""; }
+  get textContent() { return this._textContent || ""; }
+  set textContent(value) { this._textContent = String(value); }
   get lastElementChild() { return this.children[this.children.length - 1]; }
   get firstElementChild() { return this.children[0]; }
 
