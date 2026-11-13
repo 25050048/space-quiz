@@ -350,12 +350,16 @@
     }
     .next[hidden] { display: none; }
     .next:hover { transform: translateY(-2px); box-shadow: 0 11px 23px rgba(114, 87, 237, .3); }
+    .next:disabled { cursor: wait; opacity: .7; }
 
     .result { padding: 13px 0 3px; text-align: center; animation: rise-in .45s ease both; }
     .result-emoji { margin: 0 0 8px; font-size: 4rem; animation: float 2.3s ease-in-out infinite; }
     .result h2 { margin: 0; font-size: 1.8rem; letter-spacing: -.04em; }
     .result p { margin: 12px 0 23px; color: var(--muted); line-height: 1.55; }
-    .result .next { justify-content: center; }
+    .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .copy-status { min-height: 1.5em; margin: 12px 0 0 !important; font-size: .88rem; font-weight: 700; }
+    .copy-status.success { color: var(--good); }
+    .copy-status.error { color: var(--bad); }
 
     .sr-only {
       position: absolute;
@@ -597,8 +601,48 @@
           <p class="eyebrow">Mission debrief</p>
           <h2>${result[1]}</h2>
           <p>You scored <strong>${score} out of ${questions.length}</strong>.<br>${result[2]}</p>
-          <button class="next" id="restart" type="button">Play again <span aria-hidden="true">↻</span></button>
+          <div class="result-actions">
+            <button class="next" id="copy-result" type="button">Copy result <span aria-hidden="true">⧉</span></button>
+            <button class="next" id="restart" type="button">Play again <span aria-hidden="true">↻</span></button>
+          </div>
+          <p class="copy-status" id="copy-status" role="status" aria-live="polite"></p>
         </div>`;
+      const copyButton = document.getElementById("copy-result");
+      copyButton.addEventListener("click", async () => {
+        const status = document.getElementById("copy-status");
+        const shareText = `I scored ${score} out of ${questions.length} on Orbit Academy — Space Quiz!`;
+        copyButton.disabled = true;
+        status.className = "copy-status";
+        status.textContent = "";
+
+        try {
+          if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+            await navigator.clipboard.writeText(shareText);
+          } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = shareText;
+            textArea.setAttribute("readonly", "");
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.append(textArea);
+            let copied = false;
+            try {
+              textArea.select();
+              copied = typeof document.execCommand === "function" && document.execCommand("copy");
+            } finally {
+              textArea.remove();
+            }
+            if (!copied) throw new Error("Clipboard access is unavailable");
+          }
+          status.textContent = "Result copied to clipboard!";
+          status.classList.add("success");
+        } catch {
+          status.textContent = "Could not copy result. Please try again or copy it manually.";
+          status.classList.add("error");
+        } finally {
+          copyButton.disabled = false;
+        }
+      });
       document.getElementById("restart").addEventListener("click", restart);
       document.getElementById("restart").focus();
     }
